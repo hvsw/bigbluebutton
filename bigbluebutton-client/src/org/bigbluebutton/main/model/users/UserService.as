@@ -51,6 +51,11 @@ package org.bigbluebutton.main.model.users
 		private var hostURI:String;		
 		private var connection:NetConnection;
 		private var dispatcher:Dispatcher;
+
+		private static const LOGOUT_URL_TOKEN_FULLNAME:String = "%%FULLNAME%%";
+		private static const LOGOUT_URL_TOKEN_CONFERENCE:String = "%%CONFNAME%%";
+		private static const LOGOUT_URL_INDEX_TOKEN:int = 0;
+		private static const LOGOUT_URL_INDEX_VALUE:int = 1;
 		
 		public function UserService() {
 			dispatcher = new Dispatcher();
@@ -60,7 +65,7 @@ package org.bigbluebutton.main.model.users
 			applicationURI = e.applicationURI;
 			hostURI = e.hostURI;
 			BBB.initConnectionManager().isTunnelling = e.isTunnelling;
-      
+	  
 			joinService = new JoinService();
 			joinService.addJoinResultListener(joinListener);
 			joinService.load(e.hostURI);
@@ -73,20 +78,19 @@ package org.bigbluebutton.main.model.users
 				UserManager.getInstance().getConference().setMyRoom(result.room);
 				UserManager.getInstance().getConference().setMyAuthToken(result.authToken);
 				UserManager.getInstance().getConference().setMyCustomData(result.customdata);
-        UserManager.getInstance().getConference().setDefaultLayout(result.defaultLayout);
-        
-        UserManager.getInstance().getConference().externalMeetingID = result.externMeetingID;
-        UserManager.getInstance().getConference().meetingName = result.conferenceName;
-        UserManager.getInstance().getConference().internalMeetingID = result.room;
-        UserManager.getInstance().getConference().externalUserID = result.externUserID;
-        UserManager.getInstance().getConference().avatarURL = result.avatarURL;
-		UserManager.getInstance().getConference().voiceBridge = result.voicebridge;
-		UserManager.getInstance().getConference().dialNumber = result.dialnumber;
-		
-        
+				UserManager.getInstance().getConference().setDefaultLayout(result.defaultLayout);
+
+				UserManager.getInstance().getConference().externalMeetingID = result.externMeetingID;
+				UserManager.getInstance().getConference().meetingName = result.conferenceName;
+				UserManager.getInstance().getConference().internalMeetingID = result.room;
+				UserManager.getInstance().getConference().externalUserID = result.externUserID;
+				UserManager.getInstance().getConference().avatarURL = result.avatarURL;
+				UserManager.getInstance().getConference().voiceBridge = result.voicebridge;
+				UserManager.getInstance().getConference().dialNumber = result.dialnumber;
+
 				_conferenceParameters = new ConferenceParameters();
-        _conferenceParameters.meetingName = result.conferenceName;
-        _conferenceParameters.externMeetingID = result.externMeetingID;
+				_conferenceParameters.meetingName = result.conferenceName;
+				_conferenceParameters.externMeetingID = result.externMeetingID;
 				_conferenceParameters.conference = result.conference;
 				_conferenceParameters.username = result.username;
 				_conferenceParameters.role = result.role;
@@ -97,16 +101,16 @@ package org.bigbluebutton.main.model.users
 				_conferenceParameters.meetingID = result.meetingID;
 				_conferenceParameters.externUserID = result.externUserID;
 				_conferenceParameters.internalUserID = result.internalUserId;
-				_conferenceParameters.logoutUrl = result.logoutUrl;
+				_conferenceParameters.logoutUrl = replaceTokenslogoutUrl(result);
 				_conferenceParameters.record = true;
 				
 				if (result.record == "false") {
 					_conferenceParameters.record = false;
 				}
 				
-                // assign the meeting name to the document title
-                ExternalInterface.call("setTitle", _conferenceParameters.meetingName);
-                
+				// assign the meeting name to the document title
+				ExternalInterface.call("setTitle", _conferenceParameters.meetingName);
+				
 				/**
 				 * Temporarily store the parameters in global BBB so we get easy access to it.
 				 */
@@ -119,6 +123,24 @@ package org.bigbluebutton.main.model.users
 				connect();
 			}
 		}
+
+		private function replaceTokenslogoutUrl(confInfo:Object):String{
+			var logoutUrl:String = confInfo.logoutUrl;
+			var tokenslogoutUrl:Array = new Array();
+			var token:String;
+			var value:String;
+			
+			tokenslogoutUrl.push(new Array(LOGOUT_URL_TOKEN_FULLNAME  , confInfo.username));
+			tokenslogoutUrl.push(new Array(LOGOUT_URL_TOKEN_CONFERENCE, confInfo.conference));
+			//logoutUrl = "http://www.ufrgs.br/telessauders/logout_mconf?usuario=" + LOGOUT_URL_TOKEN_FULLNAME + "&conferencia=" + LOGOUT_URL_TOKEN_CONFERENCE + "&usuario2=" + LOGOUT_URL_TOKEN_FULLNAME + "&conferencia2=" + LOGOUT_URL_TOKEN_CONFERENCE;
+			
+			for(var i:int = tokenslogoutUrl.length-1; i >= 0; i--){
+				token = tokenslogoutUrl[i][LOGOUT_URL_INDEX_TOKEN];
+				value = tokenslogoutUrl[i][LOGOUT_URL_INDEX_VALUE];
+				logoutUrl = logoutUrl.split(token).join(value);
+			}
+			return logoutUrl;
+		}
 		
 		private function connect():void{
 			_userSOService = new UsersSOService(applicationURI);
@@ -126,7 +148,7 @@ package org.bigbluebutton.main.model.users
 		}
 		
 		public function userLoggedIn(e:UsersConnectionEvent):void{
-      LogUtil.debug("In UserService:userLoggedIn - Setting my userid to [" + e.userid + "]");
+	  LogUtil.debug("In UserService:userLoggedIn - Setting my userid to [" + e.userid + "]");
 			UserManager.getInstance().getConference().setMyUserid(e.userid);
 			_conferenceParameters.connection = e.connection;
 			_conferenceParameters.userid = e.userid;
