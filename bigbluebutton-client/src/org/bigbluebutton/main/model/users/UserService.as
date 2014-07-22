@@ -101,7 +101,7 @@ package org.bigbluebutton.main.model.users
 				_conferenceParameters.meetingID = result.meetingID;
 				_conferenceParameters.externUserID = result.externUserID;
 				_conferenceParameters.internalUserID = result.internalUserId;
-				_conferenceParameters.logoutUrl = replaceTokenslogoutUrl(result);
+				_conferenceParameters.logoutUrl = replaceTokensLogoutUrl(result);
 				_conferenceParameters.record = true;
 				
 				if (result.record == "false") {
@@ -124,7 +124,7 @@ package org.bigbluebutton.main.model.users
 			}
 		}
 
-		private function replaceTokenslogoutUrl(confInfo:Object):String{
+		private function replaceTokensLogoutUrl(confInfo:Object):String{
 			var logoutUrl:String = confInfo.logoutUrl;
 			var tokenslogoutUrl:Array = new Array();
 			var token:String;
